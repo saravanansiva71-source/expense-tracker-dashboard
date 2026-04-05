@@ -3,6 +3,49 @@ const CONFIG = {
     API_URL: localStorage.getItem('apiUrl') || 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE',
     SHEET_ID: localStorage.getItem('sheetId') || 'YOUR_GOOGLE_SHEET_ID_HERE'
 };
+// ADD THIS FUNCTION (TOP OR AFTER STATE)
+function calculatePersonOutstanding() {
+    const map = {};
+
+    state.transactions.forEach(t => {
+        if (!map[t.person]) map[t.person] = 0;
+
+        if (t.type === "Card Spend") map[t.person] += t.amount;
+        if (t.type === "Card Refund") map[t.person] -= t.amount;
+    });
+
+    return Object.entries(map).map(([name, amount]) => ({
+        name,
+        amount
+    }));
+}
+
+// UPDATE renderOverview()
+function renderOverview() {
+    calculateMetrics();
+    renderPeopleSummary(); // ⭐ NEW MAIN FEATURE
+    renderRecentTransactions();
+    renderAlerts();
+}
+
+// ADD THIS NEW FUNCTION
+function renderPeopleSummary() {
+    const data = calculatePersonOutstanding();
+    const container = document.getElementById("peopleSummary");
+
+    if (!container) return;
+
+    const sorted = data.sort((a,b)=>b.amount-a.amount);
+
+    container.innerHTML = sorted.map(p => `
+        <div class="person-row">
+            <span>${p.name}</span>
+            <span class="${p.amount > 0 ? 'negative' : 'positive'}">
+                ₹${p.amount.toLocaleString()}
+            </span>
+        </div>
+    `).join('');
+}
 
 // State Management
 const state = {
