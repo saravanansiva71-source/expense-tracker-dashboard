@@ -1017,3 +1017,44 @@ body {
     opacity: 0.5;
     cursor: not-allowed;
 }
+/* ========================= */
+/* NEW IMPROVED UI */
+/* ========================= */
+
+.metric-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+/* People Summary */
+.person-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.person-row:hover {
+    background: var(--bg-hover);
+}
+
+.negative {
+    color: var(--danger);
+}
+
+.positive {
+    color: var(--success);
+}
+
+/* Highlight important section */
+.section-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+/* Reduce visual clutter */
+.chart-card {
+    min-height: 280px;
+}
