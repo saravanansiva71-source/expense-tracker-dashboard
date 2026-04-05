@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker Dashboard</title>
+    <link rel="stylesheet" href="dashboard-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-wallet"></i> Expense Tracker</h2>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="overview">
+                <i class="fas fa-chart-line"></i>
+                <span>Overview</span>
+            </a>
+            <a href="#" class="nav-item" data-page="cards">
+                <i class="fas fa-credit-card"></i>
+                <span>Cards</span>
+            </a>
+            <a href="#" class="nav-item" data-page="people">
+                <i class="fas fa-users"></i>
+                <span>People</span>
+            </a>
+            <a href="#" class="nav-item" data-page="transactions">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Transactions</span>
+            </a>
+            <a href="#" class="nav-item" data-page="add">
+                <i class="fas fa-plus-circle"></i>
+                <span>Add Transaction</span>
+            </a>
+            <a href="#" class="nav-item" data-page="analytics">
+                <i class="fas fa-chart-pie"></i>
+                <span>Analytics</span>
+            </a>
+            <a href="#" class="nav-item" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <button id="refreshAll" class="btn-refresh">
+                <i class="fas fa-sync-alt"></i>
+                <span>Refresh Data</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="pageTitle">Overview</h1>
+            </div>
+            
+            <div class="topbar-right">
+                <div class="month-selector">
+                    <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                    <span id="currentMonthDisplay"></span>
+                    <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                
+                <div class="user-info">
+                    <span id="lastUpdate">Last updated: Never</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Overview -->
+        <div class="page active" id="page-overview">
+            <!-- Key Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon red">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Total Outstanding</h3>
+                        <p class="metric-value" id="totalOutstanding">₹0.00</p>
+                        <span class="metric-change" id="outstandingChange">vs last month</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon blue">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Monthly Spend</h3>
+                        <p class="metric-value" id="monthlySpend">₹0.00</p>
+                        <span class="metric-change" id="spendChange">vs last month</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon green">
+                        <i class="fas fa-hand-holding-usd"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Money Lent</h3>
+                        <p class="metric-value" id="moneyLent">₹0.00</p>
+                        <span class="metric-change" id="lentChange">to friends</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon orange">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Unpaid Cards</h3>
+                        <p class="metric-value" id="unpaidCards">0</p>
+                        <span class="metric-change" id="unpaidInfo">cards need payment</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-bar"></i> Spending Trend</h3>
+                        <select id="trendPeriod" class="chart-filter">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+                    <canvas id="spendingTrendChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Category Breakdown</h3>
+                        <select id="categoryPeriod" class="chart-filter">
+                            <option value="current" selected>This Month</option>
+                            <option value="last">Last Month</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Quick Actions & Alerts -->
+            <div class="quick-section">
+                <div class="quick-actions">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="showQuickAdd('Card Spend')">
+                            <i class="fas fa-credit-card"></i>
+                            Card Spend
+                        </button>
+                        <button class="action-btn" onclick="showQuickAdd('Cash Received')">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            Cash Received
+                        </button>
+                        <button class="action-btn" onclick="showQuickAdd('CC Bill Payment')">
+                            <i class="fas fa-money-check-alt"></i>
+                            Pay Bill
+                        </button>
+                        <button class="action-btn" onclick="showQuickAdd('Card Refund')">
+                            <i class="fas fa-undo"></i>
+                            Refund
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="alerts-panel">
+                    <h3><i class="fas fa-bell"></i> Alerts & Reminders</h3>
+                    <div id="alertsList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="section-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Recent Transactions</h3>
+                    <a href="#" class="view-all" onclick="switchPage('transactions')">View All →</a>
+                </div>
+                <div id="recentTransactions" class="transactions-mini-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Cards -->
+        <div class="page" id="page-cards">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>Credit Cards Management</h2>
+                    <p>Monitor all your credit card balances and payments</p>
+                </div>
+                <div class="section-actions">
+                    <select id="cardSortBy">
+                        <option value="outstanding">Sort by Outstanding</option>
+                        <option value="spend">Sort by Spend</option>
+                        <option value="status">Sort by Status</option>
+                        <option value="name">Sort by Name</option>
+                    </select>
+                    <button class="btn-export" onclick="exportCardsData()">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <div id="cardsGrid" class="cards-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Page: People -->
+        <div class="page" id="page-people">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>Person-wise Tracking</h2>
+                    <p>Track spending and outstanding amounts per person</p>
+                </div>
+                <div class="section-actions">
+                    <select id="personSortBy">
+                        <option value="outstanding">Sort by Outstanding</option>
+                        <option value="spend">Sort by Spend</option>
+                        <option value="name">Sort by Name</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="peopleGrid" class="people-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Page: Transactions -->
+        <div class="page" id="page-transactions">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>All Transactions</h2>
+                    <p>Complete transaction history with advanced filtering</p>
+                </div>
+                <div class="section-actions">
+                    <button class="btn-export" onclick="exportTransactions()">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="filters-panel">
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="searchTransactions" placeholder="Search by description, amount...">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <div class="date-range">
+                        <input type="date" id="dateFrom">
+                        <span>to</span>
+                        <input type="date" id="dateTo">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Card</label>
+                    <select id="filterCard" multiple>
+                        <option value="">All Cards</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Person</label>
+                    <select id="filterPerson" multiple>
+                        <option value="">All Persons</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Type</label>
+                    <select id="filterType" multiple>
+                        <option value="">All Types</option>
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button class="btn-apply" onclick="applyFilters()">Apply Filters</button>
+                    <button class="btn-reset" onclick="resetFilters()">Reset</button>
+                </div>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="table-container">
+                <table class="transactions-table" id="transactionsTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('date')">Date <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable('type')">Type <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable('card')">Card <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable('person')">Person <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable('amount')">Amount <i class="fas fa-sort"></i></th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Page: Add Transaction -->
+        <div class="page" id="page-add">
+            <div class="add-transaction-container">
+                <div class="form-card">
+                    <div class="form-header">
+                        <h2><i class="fas fa-plus-circle"></i> Add New Transaction</h2>
+                        <p>Enter transaction details below</p>
+                    </div>
+
+                    <form id="transactionForm" class="transaction-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="txDate">Date *</label>
+                                <input type="date" id="txDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="txType">Transaction Type *</label>
+                                <select id="txType" required onchange="updateFormFields()">
+                                    <option value="">Select Type</option>
+                                    <option value="Card Spend">💳 Card Spend</option>
+                                    <option value="Card Refund">↩️ Card Refund</option>
+                                    <option value="CC Bill Payment">💰 CC Bill Payment</option>
+                                    <option value="Expense">🛒 Expense</option>
+                                    <option value="Utilities">⚡ Utilities</option>
+                                    <option value="Online Spend">🌐 Online Spend</option>
+                                    <option value="Convenience Fee">📋 Convenience Fee</option>
+                                    <option value="Cash Lent">🤝 Cash Lent</option>
+                                    <option value="Cash Received">💵 Cash Received</option>
+                                    <option value="Cash Given">💸 Cash Given</option>
+                                    <option value="Cash Returned">🔄 Cash Returned</option>
+                                    <option value="Income">💰 Income</option>
+                                    <option value="Loan Taken">🏦 Loan Taken</option>
+                                    <option value="Loan Repaid">✅ Loan Repaid</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="txCard">Card/Account *</label>
+                                <select id="txCard" required>
+                                    <option value="">Select Card</option>
+                                    <option value="HDFC Swiggy card">HDFC Swiggy card</option>
+                                    <option value="Kiwi card">Kiwi card</option>
+                                    <option value="SBI Cashback">SBI Cashback</option>
+                                    <option value="Axis Myzone">Axis Myzone</option>
+                                    <option value="Axis Neo">Axis Neo</option>
+                                    <option value="Kotak Mojo">Kotak Mojo</option>
+                                    <option value="SBI Phonepe">SBI Phonepe</option>
+                                    <option value="Slice">Slice</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Cash">Cash</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="txPerson">Person *</label>
+                                <select id="txPerson" required>
+                                    <option value="">Select Person</option>
+                                    <option value="Me">Me</option>
+                                    <option value="Silambu">Silambu</option>
+                                    <option value="Jayavel">Jayavel</option>
+                                    <option value="Kalai">Kalai</option>
+                                    <option value="Poobalan">Poobalan</option>
+                                    <option value="Thamil">Thamil</option>
+                                    <option value="Ramya">Ramya</option>
+                                    <option value="Dhilip">Dhilip</option>
+                                    <option value="Chida">Chida</option>
+                                    <option value="Jagadeesh">Jagadeesh</option>
+                                    <option value="Vel Murugan">Vel Murugan</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="txAmount">Amount (₹) *</label>
+                                <input type="number" id="txAmount" step="0.01" required placeholder="0.00">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="txDescription">Description</label>
+                                <input type="text" id="txDescription" placeholder="Optional description">
+                            </div>
+                        </div>
+
+                        <div id="additionalFields">
+                            <!-- Dynamic fields based on transaction type -->
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-check"></i> Add Transaction
+                            </button>
+                            <button type="button" class="btn-clear" onclick="clearForm()">
+                                <i class="fas fa-times"></i> Clear Form
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="formMessage" class="form-message hidden"></div>
+                </div>
+
+                <!-- Quick Stats Sidebar -->
+                <div class="quick-stats-sidebar">
+                    <h3>💡 Quick Stats</h3>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Transactions Today</span>
+                        <span class="stat-value" id="txToday">0</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">This Month</span>
+                        <span class="stat-value" id="txThisMonth">0</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Avg per Day</span>
+                        <span class="stat-value" id="avgPerDay">₹0</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4>Recent Categories</h4>
+                    <div id="recentCategories">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Analytics -->
+        <div class="page" id="page-analytics">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>Advanced Analytics</h2>
+                    <p>Deep insights into your spending patterns</p>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="chart-card full-width">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-area"></i> Monthly Comparison</h3>
+                        <select id="comparisonMonths">
+                            <option value="3">Last 3 months</option>
+                            <option value="6" selected>Last 6 months</option>
+                            <option value="12">Last 12 months</option>
+                        </select>
+                    </div>
+                    <canvas id="monthlyComparisonChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-users"></i> Person-wise Distribution</h3>
+                    </div>
+                    <canvas id="personDistributionChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-credit-card"></i> Card Usage</h3>
+                    </div>
+                    <canvas id="cardUsageChart"></canvas>
+                </div>
+
+                <div class="insights-card">
+                    <h3><i class="fas fa-lightbulb"></i> AI Insights</h3>
+                    <div id="aiInsights">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="insights-card">
+                    <h3><i class="fas fa-chart-line"></i> Trends</h3>
+                    <div id="trendInsights">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Settings -->
+        <div class="page" id="page-settings">
+            <div class="settings-container">
+                <h2>Settings</h2>
+                
+                <div class="settings-section">
+                    <h3><i class="fas fa-link"></i> Google Sheets Connection</h3>
+                    <div class="form-group">
+                        <label>Apps Script URL</label>
+                        <input type="text" id="settingsApiUrl" placeholder="https://script.google.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label>Sheet ID</label>
+                        <input type="text" id="settingsSheetId" placeholder="Your Google Sheet ID">
+                    </div>
+                    <button class="btn-save" onclick="saveSettings()">Save Connection</button>
+                    <button class="btn-test" onclick="testConnection()">Test Connection</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3><i class="fas fa-palette"></i> Appearance</h3>
+                    <div class="theme-selector">
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="light" checked>
+                            <span>Light</span>
+                        </label>
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="dark">
+                            <span>Dark</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3><i class="fas fa-bell"></i> Notifications</h3>
+                    <label class="toggle">
+                        <input type="checkbox" id="notifyBillDue" checked>
+                        <span>Bill due reminders</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="notifyHighSpend" checked>
+                        <span>High spending alerts</span>
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <h3><i class="fas fa-database"></i> Data Management</h3>
+                    <button class="btn-export" onclick="exportAllData()">
+                        <i class="fas fa-download"></i> Export All Data
+                    </button>
+                    <button class="btn-danger" onclick="clearCache()">
+                        <i class="fas fa-trash"></i> Clear Cache
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Quick Add Modal -->
+    <div class="modal" id="quickAddModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="quickAddTitle">Quick Add</h3>
+                <button class="modal-close" onclick="closeQuickAdd()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="quickAddForm">
+                <input type="hidden" id="quickAddType">
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="quickAmount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Card</label>
+                    <select id="quickCard" required>
+                        <option value="">Select Card</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Person</label>
+                    <select id="quickPerson" required>
+                        <option value="">Select Person</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit">Add</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="dashboard-app.js"></script>
+</body>
+</html>
